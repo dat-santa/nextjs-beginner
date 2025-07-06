@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Giảng Nhập Môn Next.js Tương Tác</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Slate, Cyan) -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive "Learning Journey" with a fixed sidebar for navigation. This structure breaks the dense tutorial into manageable, focused sections (Introduction, Setup, Project Structure, etc.), which is more effective for beginners than a long text document. Key interactions include an interactive file explorer to make the abstract project structure tangible, clickable cards for benefits, and copyable code snippets to facilitate hands-on practice. This user flow guides the learner step-by-step, reinforcing concepts through interaction and visual aids. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: List of Next.js benefits -> Goal: Inform/Compare -> Viz: Interactive cards with hover effects and a Chart.js Donut Chart -> Justification: More engaging and visually summarises the key selling points compared to a static list.
+        - Report Info: Project folder descriptions -> Goal: Organize/Explore -> Viz: Clickable file tree diagram built with HTML/CSS/JS -> Justification: Visually represents the hierarchy and allows self-paced exploration, making a complex topic more understandable.
+        - Report Info: Table of special App Router files -> Goal: Organize/Inform -> Viz: Interactive tabbed component -> Justification: Hides complexity by default and reveals detailed information on demand, preventing cognitive overload.
+        - Report Info: Code snippets for setup/commands -> Goal: Instruct/Facilitate -> Presentation: Styled code blocks with a one-click "copy" button -> Justification: Greatly improves usability for a tutorial format, reducing errors and friction.
+        - Library/Method: Chart.js for visualization, Vanilla JS for all interactions (navigation, file tree, copy-paste, tabs). -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .code-block {
+            background-color: #1e293b; /* slate-800 */
+            color: #e2e8f0; /* slate-200 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #475569; /* slate-600 */
+            color: #cbd5e1; /* slate-300 */
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #64748b; /* slate-500 */
+        }
+        .sidebar-link.active {
+            background-color: #cffafe; /* cyan-100 */
+            color: #0891b2; /* cyan-600 */
+            font-weight: 600;
+        }
+        .file-tree-item {
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+        .file-tree-item:hover {
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            margin: auto;
+            max-height: 400px;
+        }
+        .tab-btn.active {
+            border-bottom-color: #0891b2; /* cyan-600 */
+            color: #0891b2; /* cyan-600 */
+            font-weight: 600;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="w-full">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-full md:w-64 bg-white border-r border-slate-200 p-4 md:p-6 md:fixed md:h-full">
+            <h1 class="text-xl font-bold text-slate-800 mb-6">Học Next.js</h1>
+            <nav id="nav-menu">
+                <ul class="space-y-2">
+                    <li><a href="#section-intro" class="sidebar-link block px-4 py-2 rounded-md text-slate-600 hover:bg-slate-100">1. Giới thiệu</a></li>
+                    <li><a href="#section-benefits" class="sidebar-link block px-4 py-2 rounded-md text-slate-600 hover:bg-slate-100">2. Lợi ích vượt trội</a></li>
+                    <li><a href="#section-setup" class="sidebar-link block px-4 py-2 rounded-md text-slate-600 hover:bg-slate-100">3. Bắt đầu dự án</a></li>
+                    <li><a href="#section-structure" class="sidebar-link block px-4 py-2 rounded-md text-slate-600 hover:bg-slate-100">4. Cấu trúc dự án</a></li>
+                    <li><a href="#section-run" class="sidebar-link block px-4 py-2 rounded-md text-slate-600 hover:bg-slate-100">5. Chạy ứng dụng</a></li>
+                    <li><a href="#section-first-page" class="sidebar-link block px-4 py-2 rounded-md text-slate-600 hover:bg-slate-100">6. Trang đầu tiên</a></li>
+                    <li><a href="#section-summary" class="sidebar-link block px-4 py-2 rounded-md text-slate-600 hover:bg-slate-100">7. Tóm tắt & Tiếp theo</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 md:ml-64 p-4 sm:p-6 md:p-10">
+            <div id="content-sections" class="max-w-4xl mx-auto space-y-16">
+                
+                <!-- Section 1: Introduction -->
+                <section id="section-intro" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-2 border-cyan-500 pb-2">1. Giới Thiệu Next.js: Tại Sao Bạn Nên Học?</h2>
+                    <p class="text-lg text-slate-600 mb-6">
+                        Trong thế giới phát triển web hiện đại, Next.js nổi lên như một giải pháp hàng đầu để xây dựng các ứng dụng nhanh, hiệu quả và thân thiện với SEO. Nó là một framework React, cung cấp cho bạn một cấu trúc và các công cụ mạnh mẽ để tạo ra các trang web chất lượng cao một cách dễ dàng.
+                    </p>
+                    <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                        <h3 class="font-semibold text-lg text-slate-700 mb-2">💡 Next.js là gì?</h3>
+                        <p class="text-slate-600">
+                            Next.js là một framework phát triển web mã nguồn mở được tạo bởi <a href="https://vercel.com" target="_blank" class="text-cyan-600 hover:underline">Vercel</a>, xây dựng trên nền tảng React. Điểm nổi bật của nó là khả năng kết hợp mạnh mẽ giữa <b class="font-semibold">Server-Side Rendering (SSR)</b> và <b class="font-semibold">Static Site Generation (SSG)</b>, cho phép tạo ra các ứng dụng web với hiệu suất vượt trội.
+                        </p>
+                        <p class="text-slate-600 mt-4">
+                            Một trong những triết lý cốt lõi là <b class="font-semibold">"Zero Config"</b>. Điều này có nghĩa là bạn có thể tập trung vào việc viết code cho ứng dụng của mình mà không cần lo lắng về các cấu hình phức tạp của Webpack hay Babel.
+                        </p>
+                    </div>
+                </section>
+                
+                <hr class="border-slate-200">
+
+                <!-- Section 2: Benefits -->
+                <section id="section-benefits" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-2 border-cyan-500 pb-2">2. Những Lợi Ích Vượt Trội</h2>
+                     <p class="text-lg text-slate-600 mb-6">
+                        Next.js không chỉ là một công cụ mà còn là một giải pháp toàn diện. Dưới đây là những lợi ích chính được trực quan hóa để bạn dễ dàng nắm bắt.
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div class="space-y-4">
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
+                                <h3 class="font-semibold text-cyan-700">🚀 Hiệu suất vượt trội</h3>
+                                <p class="text-sm text-slate-600">Trang web tải nhanh và mượt mà nhờ SSG, SSR, và tối ưu hóa tự động.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
+                                <h3 class="font-semibold text-cyan-700">🔍 Tối ưu hóa SEO mạnh mẽ</h3>
+                                <p class="text-sm text-slate-600">Nội dung được render sẵn giúp công cụ tìm kiếm dễ dàng lập chỉ mục.</p>
+                            </div>
+                             <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
+                                <h3 class="font-semibold text-cyan-700">💻 Trải nghiệm phát triển (DX) tuyệt vời</h3>
+                                <p class="text-sm text-slate-600">Với Fast Refresh và Zero Config, bạn chỉ cần tập trung vào việc viết code.</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
+                                <h3 class="font-semibold text-cyan-700">🌐 Linh hoạt và Mở rộng</h3>
+                                <p class="text-sm text-slate-600">Từ blog cá nhân đến các trang thương mại điện tử phức tạp.</p>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="benefitsChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <hr class="border-slate-200">
+
+                <!-- Section 3: Getting Started -->
+                <section id="section-setup" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-2 border-cyan-500 pb-2">3. Bắt Đầu Dự Án</h2>
+                    <p class="text-lg text-slate-600 mb-6">Hãy cùng nhau thiết lập môi trường và tạo dự án Next.js đầu tiên. Chúng tôi sẽ sử dụng một dự án mẫu để bạn có thể tập trung vào việc học các tính năng cốt lõi.</p>
+                    
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2">Bước 1: Cài đặt `pnpm` (Nếu chưa có)</h3>
+                            <p class="text-slate-600 mb-3">`pnpm` là một trình quản lý gói nhanh và hiệu quả, được Next.js khuyến nghị. Mở terminal và chạy lệnh sau:</p>
+                            <div class="code-block">
+                                <pre><code id="code-pnpm">npm install -g pnpm</code></pre>
+                                <button class="copy-button" onclick="copyCode('code-pnpm')">Sao chép</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2">Bước 2: Tạo dự án Next.js mới</h3>
+                            <p class="text-slate-600 mb-3">Sử dụng `create-next-app` để tạo dự án từ một mẫu có sẵn. Lệnh này sẽ tạo một thư mục tên là `nextjs-dashboard`.</p>
+                             <div class="code-block">
+                                <pre><code id="code-create-app">npx create-next-app@latest nextjs-dashboard --example "https://github.com/vercel/next-learn/tree/main/dashboard/starter-example" --use-pnpm</code></pre>
+                                <button class="copy-button" onclick="copyCode('code-create-app')">Sao chép</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="border-slate-200">
+
+                <!-- Section 4: Project Structure -->
+                <section id="section-structure" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-2 border-cyan-500 pb-2">4. Khám Phá Cấu Trúc Dự Án</h2>
+                    <p class="text-lg text-slate-600 mb-6">Hiểu cấu trúc thư mục là rất quan trọng. Next.js sử dụng App Router, nơi các thư mục và tệp có ý nghĩa đặc biệt. <b class="font-semibold">Hãy nhấp vào từng mục bên dưới để xem mô tả chi tiết.</b></p>
+                    
+                    <div class="flex flex-col md:flex-row gap-6 bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                        <!-- File Tree -->
+                        <div class="w-full md:w-1/3 font-mono text-sm">
+                            <ul id="file-tree" class="space-y-1">
+                                <li data-key="root" class="file-tree-item font-semibold">nextjs-dashboard/</li>
+                                <ul>
+                                    <li data-key="app" class="file-tree-item ml-4">📂 app/</li>
+                                    <ul>
+                                        <li data-key="app-lib" class="file-tree-item ml-8">📂 lib/</li>
+                                        <li data-key="app-ui" class="file-tree-item ml-8">📂 ui/</li>
+                                        <li data-key="app-page" class="file-tree-item ml-8">📄 page.tsx</li>
+                                        <li data-key="app-layout" class="file-tree-item ml-8">📄 layout.tsx</li>
+                                    </ul>
+                                    <li data-key="public" class="file-tree-item ml-4">📂 public/</li>
+                                    <li data-key="config" class="file-tree-item ml-4">📄 next.config.ts</li>
+                                    <li data-key="package" class="file-tree-item ml-4">📄 package.json</li>
+                                </ul>
+                            </ul>
+                        </div>
+                        <!-- Description Panel -->
+                        <div id="file-desc-panel" class="w-full md:w-2/3 bg-slate-50 p-4 rounded-md border border-slate-200">
+                            <h4 id="file-desc-title" class="font-bold text-slate-700">Mô tả</h4>
+                            <p id="file-desc-content" class="text-slate-600 mt-2">Chọn một tệp hoặc thư mục để xem thông tin.</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <hr class="border-slate-200">
+
+                <!-- Section 5: Run App -->
+                <section id="section-run" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-2 border-cyan-500 pb-2">5. Chạy Ứng Dụng Của Bạn</h2>
+                    <p class="text-lg text-slate-600 mb-6">Sau khi thiết lập, hãy khởi động server phát triển và xem ứng dụng của bạn hoạt động trên trình duyệt.</p>
+
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2">Bước 1: Cài đặt các gói phụ thuộc</h3>
+                            <p class="text-slate-600 mb-3">Điều hướng vào thư mục dự án và cài đặt tất cả các gói cần thiết từ `package.json`.</p>
+                            <div class="code-block">
+                                <pre><code id="code-cd">cd nextjs-dashboard</code><br><code id="code-pnpm-i">pnpm install</code></pre>
+                                <button class="copy-button" onclick="copyCode('code-pnpm-i')">Sao chép</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2">Bước 2: Khởi động máy chủ phát triển</h3>
+                            <p class="text-slate-600 mb-3">Lệnh này sẽ khởi động một máy chủ cục bộ (thường là trên cổng 3000) với tính năng Fast Refresh.</p>
+                            <div class="code-block">
+                                <pre><code id="code-pnpm-dev">pnpm dev</code></pre>
+                                <button class="copy-button" onclick="copyCode('code-pnpm-dev')">Sao chép</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2">Bước 3: Xem trên trình duyệt</h3>
+                            <p class="text-slate-600 mb-3">Mở trình duyệt và truy cập vào địa chỉ <a href="http://localhost:3000" target="_blank" class="text-cyan-600 font-semibold hover:underline">http://localhost:3000</a>. Bạn sẽ thấy trang chủ của ứng dụng dashboard!</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <hr class="border-slate-200">
+
+                <!-- Section 6: First Page with App Router -->
+                <section id="section-first-page" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-2 border-cyan-500 pb-2">6. Tạo Trang Đầu Tiên với App Router</h2>
+                    <p class="text-lg text-slate-600 mb-6">
+                        App Router là trái tim của việc điều hướng trong các ứng dụng Next.js hiện đại. Các tuyến đường được tạo ra dựa trên cấu trúc thư mục. Bất kỳ thư mục nào trong `app/` có chứa tệp `page.tsx` sẽ trở thành một trang có thể truy cập.
+                    </p>
+                    <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                        <h3 class="text-xl font-semibold text-slate-700 mb-4">Thực hành: Tạo trang `/dashboard`</h3>
+                        <ol class="list-decimal list-inside space-y-4 text-slate-600">
+                            <li>Trong thư mục `app/`, tạo một thư mục mới có tên là `dashboard`.</li>
+                            <li>Bên trong `app/dashboard/`, tạo một tệp mới tên là `page.tsx`.</li>
+                            <li>Dán đoạn mã sau vào tệp `app/dashboard/page.tsx`:</li>
+                        </ol>
+                        <div class="my-4 code-block">
+                            <pre><code id="code-dashboard-page">export default function Page() {
+  return &lt;h1&gt;Chào mừng đến với Dashboard!&lt;/h1&gt;;
+}</code></pre>
+                            <button class="copy-button" onclick="copyCode('code-dashboard-page')">Sao chép</button>
+                        </div>
+                         <p class="text-slate-600">Lưu tệp và truy cập <a href="http://localhost:3000/dashboard" target="_blank" class="text-cyan-600 font-semibold hover:underline">http://localhost:3000/dashboard</a> để xem trang mới của bạn!</p>
+                    </div>
+
+                    <div class="mt-8">
+                        <h3 class="text-xl font-semibold text-slate-700 mb-4">Các "Tệp Đặc Biệt" trong App Router</h3>
+                        <p class="text-slate-600 mb-4">Ngoài `page.tsx`, App Router còn sử dụng các tệp khác để xây dựng UI. Hãy khám phá chúng:</p>
+                        <div id="special-files-tabs">
+                            <div class="border-b border-slate-200">
+                                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                    <button data-target="tab-page" class="tab-btn active whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-cyan-600 border-transparent">page.tsx</button>
+                                    <button data-target="tab-layout" class="tab-btn whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-cyan-600 border-transparent">layout.tsx</button>
+                                    <button data-target="tab-loading" class="tab-btn whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-cyan-600 border-transparent">loading.tsx</button>
+                                    <button data-target="tab-error" class="tab-btn whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-cyan-600 border-transparent">error.tsx</button>
+                                    <button data-target="tab-route" class="tab-btn whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-cyan-600 border-transparent">route.ts</button>
+                                </nav>
+                            </div>
+                            <div class="mt-4 bg-slate-50 p-4 rounded-md border border-slate-200">
+                                <div id="tab-page" class="tab-content">
+                                    <h4 class="font-bold text-slate-700">page.tsx</h4>
+                                    <p class="text-slate-600">Tạo UI duy nhất cho một tuyến đường và làm cho nó có thể truy cập công khai. Đây là thành phần bắt buộc để một trang hiển thị.</p>
+                                </div>
+                                <div id="tab-layout" class="tab-content hidden">
+                                    <h4 class="font-bold text-slate-700">layout.tsx</h4>
+                                    <p class="text-slate-600">Tạo UI được chia sẻ cho nhiều trang. Một layout bao bọc một trang hoặc các layout con. Rất hữu ích cho header, footer hoặc sidebar.</p>
+                                </div>
+                                <div id="tab-loading" class="tab-content hidden">
+                                    <h4 class="font-bold text-slate-700">loading.tsx</h4>
+                                    <p class="text-slate-600">Tạo UI tải tức thì (Instant Loading UI), chẳng hạn như skeleton hoặc spinner, để hiển thị trong khi nội dung của một tuyến đường đang tải.</p>
+                                </div>
+                                <div id="tab-error" class="tab-content hidden">
+                                    <h4 class="font-bold text-slate-700">error.tsx</h4>
+                                    <p class="text-slate-600">Tạo UI để xử lý các lỗi không mong muốn một cách duyên dáng. Nó phải là một Client Component.</p>
+                                </div>
+                                <div id="tab-route" class="tab-content hidden">
+                                    <h4 class="font-bold text-slate-700">route.ts</h4>
+                                    <p class="text-slate-600">Cho phép bạn tạo các điểm cuối API (API endpoints) phía máy chủ trong thư mục `app`.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="border-slate-200">
+
+                <!-- Section 7: Summary -->
+                <section id="section-summary" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4 border-b-2 border-cyan-500 pb-2">7. Tóm Tắt & Các Bước Tiếp Theo</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200 space-y-4">
+                        <div>
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2">🎉 Chúc mừng! Bạn đã học được:</h3>
+                            <ul class="list-disc list-inside text-slate-600 space-y-1">
+                                <li>Next.js là gì và các lợi ích chính của nó.</li>
+                                <li>Cách thiết lập một dự án Next.js bằng `create-next-app`.</li>
+                                <li>Cấu trúc thư mục cốt lõi của một ứng dụng Next.js.</li>
+                                <li>Cách khởi động máy chủ phát triển.</li>
+                                <li>Cách tạo một trang mới với App Router.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2">🗺️ Hành trình tiếp theo:</h3>
+                             <p class="text-slate-600">Học tập là một hành trình liên tục. Để tiếp tục phát triển kỹ năng của mình, bạn nên:</p>
+                             <ul class="list-disc list-inside text-slate-600 space-y-1 mt-2">
+                                <li>Tiếp tục với <a href="https://nextjs.org/learn" target="_blank" class="text-cyan-600 hover:underline">khóa học Next.js Learn chính thức</a>.</li>
+                                <li>Tìm hiểu sâu hơn về fetching data, styling, và authentication.</li>
+                                <li>Thử xây dựng một dự án nhỏ của riêng bạn, như một blog cá nhân.</li>
+                                <li>Tham gia cộng đồng Next.js để học hỏi và chia sẻ.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+<script>
+    function copyCode(elementId) {
+        const codeElement = document.getElementById(elementId);
+        const textToCopy = codeElement.innerText;
+        
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = textToCopy;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+
+        const button = codeElement.closest('.code-block').querySelector('.copy-button');
+        if (button) {
+            const originalText = button.innerText;
+            button.innerText = 'Đã chép!';
+            setTimeout(() => {
+                button.innerText = originalText;
+            }, 2000);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Chart.js for benefits
+        const ctx = document.getElementById('benefitsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Hiệu suất', 'SEO', 'Trải nghiệm DX', 'Linh hoạt'],
+                datasets: [{
+                    label: 'Lợi ích của Next.js',
+                    data: [30, 25, 25, 20],
+                    backgroundColor: [
+                        '#06b6d4', // cyan-500
+                        '#0891b2', // cyan-600
+                        '#0e7490', // cyan-700
+                        '#155e75'  // cyan-800
+                    ],
+                    borderColor: '#f8fafc', // slate-50
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                family: "'Be Vietnam Pro', sans-serif"
+                            }
+                        }
+                    },
+                    tooltip: {
+                         bodyFont: {
+                            family: "'Be Vietnam Pro', sans-serif"
+                        },
+                        titleFont: {
+                            family: "'Be Vietnam Pro', sans-serif"
+                        }
+                    }
+                }
+            }
+        });
+
+        // Interactive File Tree
+        const fileTreeItems = document.querySelectorAll('#file-tree .file-tree-item');
+        const descTitle = document.getElementById('file-desc-title');
+        const descContent = document.getElementById('file-desc-content');
+        
+        const descriptions = {
+            root: { title: 'Thư mục gốc', content: 'Chứa toàn bộ mã nguồn và các tệp cấu hình cho dự án của bạn.' },
+            app: { title: '/app', content: 'Trái tim của ứng dụng. Chứa tất cả các tuyến đường, component, và logic chính. Đây là nơi bạn sẽ làm việc chủ yếu.' },
+            'app-lib': { title: '/app/lib', content: 'Chứa các hàm tiện ích và logic tìm nạp dữ liệu. Việc tách biệt logic này giúp giữ cho các component UI gọn gàng.' },
+            'app-ui': { title: '/app/ui', content: 'Chứa tất cả các component giao diện người dùng (UI) cho ứng dụng, như nút, biểu mẫu, bảng, v.v.' },
+            'app-page': { title: '/app/page.tsx', content: 'Đây là tệp UI cho trang chủ (tuyến đường /). Mỗi tuyến đường công khai cần một tệp `page.tsx`.' },
+            'app-layout': { title: '/app/layout.tsx', content: 'Đây là layout gốc, được chia sẻ trên tất cả các trang. Nó phải chứa các thẻ `<html>` và `<body>`.' },
+            public: { title: '/public', content: 'Chứa tất cả các tài sản tĩnh như hình ảnh, font chữ. Các tệp ở đây có thể được truy cập từ gốc của ứng dụng.' },
+            config: { title: 'next.config.ts', content: 'Tệp cấu hình cho Next.js. Bạn có thể tùy chỉnh các hành vi của framework tại đây.' },
+            package: { title: 'package.json', content: 'Liệt kê các gói phụ thuộc của dự án và các script (như `dev`, `build`, `start`).' }
+        };
+
+        fileTreeItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const key = item.getAttribute('data-key');
+                if (descriptions[key]) {
+                    descTitle.textContent = descriptions[key].title;
+                    descContent.textContent = descriptions[key].content;
+                }
+            });
+        });
+
+        // Special Files Tabs
+        const tabButtons = document.querySelectorAll('#special-files-tabs .tab-btn');
+        const tabContents = document.querySelectorAll('#special-files-tabs .tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                tabContents.forEach(content => content.classList.add('hidden'));
+                const targetId = button.getAttribute('data-target');
+                document.getElementById(targetId).classList.remove('hidden');
+            });
+        });
+
+
+        // Active sidebar link on scroll
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('#nav-menu a');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href').substring(1) === entry.target.id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, { rootMargin: "-30% 0px -70% 0px" });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+    });
+</script>
+
+</body>
+</html>
