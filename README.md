@@ -1,1 +1,1 @@
-# nextjs-beginner
+# Learn Next.js for Beginner
